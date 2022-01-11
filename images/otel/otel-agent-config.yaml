@@ -1,0 +1,38 @@
+receivers:
+  prometheus:
+    config:
+      global:
+        scrape_interval: 15s
+        scrape_timeout: 10s
+      scrape_configs:
+      - job_name: "app-mesh-monitoring"
+        metrics_path: /stats/prometheus
+        static_configs:
+        - targets: [ 0.0.0.0:9901 ]
+  awsecscontainermetrics:
+    collection_interval: 15s
+exporters:
+  awsprometheusremotewrite:
+    endpoint: $AWS_PROMETHEUS_ENDPOINT
+    aws_auth:
+      region: $AWS_DEFAULT_REGION
+      service: "aps"
+    resource_to_telemetry_conversion:
+      enabled: true
+  logging:
+    loglevel: debug
+extensions:
+  health_check:
+  pprof:
+    endpoint: :1888
+  zpages:
+    endpoint: :55679
+service:
+  extensions: [pprof, zpages, health_check]
+  pipelines:
+    metrics:
+      receivers: [prometheus]
+      exporters: [logging, awsprometheusremotewrite]
+    metrics/ecs:
+      receivers: [awsecscontainermetrics]
+      exporters: [logging, awsprometheusremotewrite]

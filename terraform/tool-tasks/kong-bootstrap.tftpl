@@ -1,0 +1,44 @@
+[
+    {
+        "name": "kong-bootstrap",
+        "image": "kong",
+        "cpu": 0,
+        "memory": 256,
+        "essential": true,
+        "command": [
+            "kong",
+            "migrations",
+            "bootstrap"
+        ],
+        "environment": [
+            {
+                "name":  "KONG_DATABASE",
+                "value": "postgres"
+            },
+            {
+                "name":  "KONG_PG_HOST",
+                "value": "${kong.host}"
+            }
+        ],
+        "secrets": [
+            {
+                "name": "KONG_PG_USER",
+                "valueFrom": "${kong.username}"
+            },
+            {
+                "name": "KONG_PG_PASSWORD",
+                "valueFrom": "${kong.password}"
+            }
+        ],
+        "user": "1337",
+        "logConfiguration": {
+            "logDriver": "awslogs",
+            "secretOptions": null,
+            "options": {
+                "awslogs-group": "/ecs/UC-Tools",
+                "awslogs-region": "us-east-1",
+                "awslogs-stream-prefix": "ecs"
+            }
+        }
+    }
+]

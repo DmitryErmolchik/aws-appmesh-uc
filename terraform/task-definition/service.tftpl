@@ -1,0 +1,163 @@
+[
+    {
+        "name": "${config.container_name}",
+        "image": "${config.service_image}",
+        "cpu": 0,
+        "memory": 256,
+        "essential": true,
+        "portMappings": [
+            {
+                "hostPort": ${config.service_port},
+                "protocol": "tcp",
+                "containerPort": ${config.service_port}
+            }
+        ],
+        "environment": [
+            {
+                "name": "COLOR",
+                "value": "${config.color}"
+            },
+            {
+                "name": "SERVICE_NAME",
+                "value": "${config.service_name}"
+            },
+            {
+                "name": "DOWNSTREAM_SERVICE",
+                "value": "${config.downstream_endpoint}"
+            }
+        ],
+        "logConfiguration": {
+            "logDriver": "awslogs",
+            "secretOptions": null,
+            "options": {
+                "awslogs-group": "${config.log_group}",
+                "awslogs-region": "us-east-1",
+                "awslogs-stream-prefix": "ecs"
+            }
+        }
+    },
+    {
+        "name": "envoy",
+        "image": "${config.envoy_image}",
+        "cpu": 0,
+        "memory": 512,
+        "essential": true,
+        "environment": [
+            {
+                "name": "ENABLE_ENVOY_STATS_TAGS",
+                "value": "1"
+            },
+            {
+                "name": "ENABLE_ENVOY_XRAY_TRACING",
+                "value": "1"
+            },
+            {
+                "name": "APPMESH_METRIC_EXTENSION_VERSION",
+                "value": "1"
+            },
+            {
+                "name": "APPMESH_VIRTUAL_NODE_NAME",
+                "value": "${config.appmesh_nodeName}"
+            },
+            {
+                "name": "ROOT_CERTIFICATE",
+                "value": "${config.appmesh_rootCertificate}"
+            },
+            {
+                "name": "NODE_CERTIFICATE_CHAIN",
+                "value": "${config.appmesh_nodeCertificateChain}"
+            },
+            {
+                "name": "NODE_CERTIFICATE_KEY",
+                "value": "${config.appmesh_nodeCertificateKey}"
+            }
+        ],
+        "healthCheck": {
+            "retries": 3,
+            "command": [
+                "CMD-SHELL",
+                "curl -s http://localhost:9901/server_info | grep state | grep -q LIVE"
+            ],
+            "timeout": 2,
+            "interval": 5,
+            "startPeriod": 60
+        },
+        "user": "1337",
+        "logConfiguration": {
+            "logDriver": "awslogs",
+            "secretOptions": null,
+            "options": {
+                "awslogs-group": "${config.log_group}",
+                "awslogs-region": "us-east-1",
+                "awslogs-stream-prefix": "ecs"
+            }
+        }
+    },
+    {
+        "name": "xray",
+        "image": "amazon/aws-xray-daemon",
+        "cpu": 0,
+        "memoryReservation": 256,
+        "essential": true,
+        "portMappings": [
+            {
+                "hostPort": 2000,
+                "protocol": "udp",
+                "containerPort": 2000
+            }
+        ],
+        "dependsOn": [
+            {
+                "containerName": "envoy",
+                "condition": "HEALTHY"
+            }
+        ],
+        "healthCheck": {
+            "retries": 3,
+            "command": [
+                "CMD-SHELL",
+                "timeout 1 /bin/bash -c \"</dev/udp/localhost/2000\""
+            ],
+            "timeout": 2,
+            "interval": 5,
+            "startPeriod": 10
+        },
+        "logConfiguration": {
+            "logDriver": "awslogs",
+            "secretOptions": null,
+            "options": {
+                "awslogs-group": "${config.log_group}",
+                "awslogs-region": "us-east-1",
+                "awslogs-stream-prefix": "ecs"
+            }
+        }
+    },
+    {
+        "name": "otel-agent",
+        "image": "${config.otel_agent_image}",
+        "cpu": 0,
+        "memory": 256,
+        "essential": true,
+        "environment": [
+            {
+                "name": "AWS_PROMETHEUS_ENDPOINT",
+                "value": "${config.prometheus_remote_write}"
+            }
+        ],
+        "dependsOn": [
+            {
+                "containerName": "envoy",
+                "condition": "HEALTHY"
+            }
+        ],
+        "logConfiguration": {
+            "logDriver": "awslogs",
+            "secretOptions": null,
+            "options": {
+                "awslogs-group": "${config.log_group}",
+                "awslogs-region": "us-east-1",
+                "awslogs-stream-prefix": "ecs"
+            }
+        }
+    }
+]

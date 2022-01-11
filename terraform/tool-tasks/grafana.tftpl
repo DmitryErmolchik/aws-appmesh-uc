@@ -1,0 +1,45 @@
+[
+    {
+        "name": "grafana",
+        "image": "grafana/grafana",
+        "cpu": 0,
+        "memory": 512,
+        "essential": true,
+        "portMappings": [
+            {
+                "hostPort": 3000,
+                "protocol": "tcp",
+                "containerPort": 3000
+            }
+        ],
+        "environment": [
+            {
+                "name":  "AWS_SDK_LOAD_CONFIG",
+                "value": "true"
+            },
+            {
+                "name":  "GF_AUTH_SIGV4_AUTH_ENABLED",
+                "value": "true"
+            }
+        ],
+        "healthCheck": {
+             "retries": 3,
+             "command": [
+                 "CMD-SHELL",
+                 "wget -q -O - http://localhost:3000/api/health | grep version"
+             ],
+             "timeout": 2,
+             "interval": 5,
+             "startPeriod": 60
+        },
+        "logConfiguration": {
+            "logDriver": "awslogs",
+            "secretOptions": null,
+            "options": {
+                "awslogs-group": "${config.log_group}",
+                "awslogs-region": "us-east-1",
+                "awslogs-stream-prefix": "ecs"
+            }
+        }
+    }
+]
