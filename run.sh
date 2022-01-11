@@ -1,13 +1,5 @@
 #!/bin/sh
-
-# Configure AWS CLI
-# https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html
-# https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html
-
-
-# Push docker image
-# https://docs.aws.amazon.com/AmazonECR/latest/userguide/docker-push-ecr-image.html
-
+terraform -chdir=./terraform init
 terraform -chdir=./terraform apply -auto-approve
 
 terraform/kong-scripts/run-uc-blue-kong-bootstrap.sh

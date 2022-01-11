@@ -22,3 +22,12 @@ or
     "message": "Service: 'Advisor-API' Color: 'Blue' External response: 'BTC-USD: 41922.63' Downstream message -> Service: 'FLA' Color: 'Blue' External response: 'BTC-USD: 41913.92' Downstream message -> Service: 'Masstrans' Color: 'Blue' External response: 'BTC-USD: 41922.63'"
 }
 ```
+
+# References
+## Configure AWS CLI
+https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html
+https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html
+
+
+# Push docker image
+https://docs.aws.amazon.com/AmazonECR/latest/userguide/docker-push-ecr-image.html
